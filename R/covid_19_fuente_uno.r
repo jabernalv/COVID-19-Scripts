@@ -29,7 +29,6 @@ library(plyr) # Lo atachamos para usar la función setDT
 setDT(time_series_ncov_Confirmed)[, Días := as.integer(Date - min(Date) + 1, units="days"), by = Country.Region]
 detach(package:plyr) # Lo desatachamos porque genera problemas en el summariza by_group
 # Seleccionamos solo algunas columnas, agrupamos por país y día, luego sumamos los valores agrupados
-# por último, filtramos hasta 30 días
 time_series_ncov_Confirmed <- time_series_ncov_Confirmed %>%
   select(c(2,6,7)) %>% 
   group_by(Country.Region, Días) %>% 
@@ -40,6 +39,7 @@ time_series_ncov_Confirmed <- time_series_ncov_Confirmed %>%
 paises <- c('Italy', 'Israel')
 
 # Filtramos solo por los países que vamos a graficar
+# por último, filtramos hasta 30 días
 serie_Grafica<-time_series_ncov_Confirmed %>% filter (Country.Region %in% paises) %>% filter(Días <= 30)
 
 # Convertimos a data.frame
