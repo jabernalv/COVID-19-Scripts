@@ -36,7 +36,7 @@ time_series_ncov_Confirmed <- time_series_ncov_Confirmed %>%
 
 # Escogemos cuáles países vamos a incluir en el reporte
 # paises <- c('Colombia', 'Ecuador', 'Peru', 'Venezuela', 'Chile', 'Italy', 'Spain', 'Switzerland', 'Germany')
-paises <- c('Italy', 'Israel')
+paises <- c('Colombia')
 
 # Filtramos solo por los países que vamos a graficar
 # por último, filtramos hasta 30 días
@@ -51,7 +51,7 @@ serie_Grafica<-data.frame(
 ggplot(data=serie_Grafica, mapping=aes(x=Días, y=Casos, colour=País)) + 
   geom_line()  + 
   geom_point( size=1, shape=21, fill="white") +
-  # geom_spline() +
+  geom_spline() +
   geom_text(aes(label = round(Casos, 1)), vjust = "inward", hjust = "inward", show.legend = FALSE) + 
   theme_minimal() +
   ggtitle(paste("Casos fallecidos COVID-19 por país. ", Sys.time())) +
