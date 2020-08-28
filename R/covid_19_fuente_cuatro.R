@@ -38,13 +38,17 @@ detach(package:plyr) # Lo desatachamos porque genera problemas en el summariza b
 
 # Escogemos cuáles países vamos a incluir en el reporte
 # paises <- c('date', 'Colombia', 'Ecuador', 'Peru', 'Venezuela', 'Chile', 'Italy', 'Spain', 'Switzerland', 'Germany')
-paises <- c('Italy', 'Spain')
+paises <- c('Colombia', 'Chile', 'Peru', 'Ecuador', 'Venezuela')
 
-ggplot(data=data_total %>% filter(País %in% paises), mapping=aes(x=Días, y=Fallecidos, colour=País)) + 
+#Graficamos
+ggplot(data = data_total %>% filter(País %in% paises & Días <= 30), mapping = aes(x = Días, y = Confirmados, colour = País)) + 
   geom_line()  + 
   geom_point( size=1, shape=21, fill="white") +
-  geom_text(aes(label = Fallecidos), vjust = "inward", hjust = "inward", show.legend = FALSE) + 
+  geom_text(aes(label = Confirmados), vjust = "inward", hjust = "inward", show.legend = FALSE) + 
+  #geom_spline() +
   theme_minimal()
-
+# https://rpubs.com/joser/SeriesTemporalesBasicas
+data_colombia <- data_total %>% filter(País %in% paises)
+Confirmados.ts <- ts(data_total %>% filter(País %in% paises) %>% select(Confirmados), start = c(2020, 3, 6), frequency = 366)
 
   

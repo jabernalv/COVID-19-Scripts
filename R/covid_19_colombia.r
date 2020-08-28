@@ -27,8 +27,71 @@ data <- read.csv("CasosColombia.csv", sep = ',') %>%
     Ciudad_ubicación = as.character(Ciudad_ubicación)
     )
 
+data_por_dia <- data.frame(table(data$Fecha_diagnóstico))
+colnames(data_por_dia) <- c('Fecha','Casos')
+data_por_dia$Fecha <- as.Date(data_por_dia$Fecha)
+data_por_dia$Total <- cumsum(data_por_dia$Casos)
+data_por_dia$Días <- as.integer(data_por_dia$Fecha - min(data_por_dia$Fecha) + 1, units="days")
 # Hay unos registros que vienen como Medellin así que se corrigen
 data$Ciudad_ubicación = ifelse(data$Ciudad_ubicación=='Medellin', 'Medellín', data$Ciudad_ubicación)
+
+# https://dlegorreta.wordpress.com/2015/04/20/series-con-tendencia-y-estacionalidad/
+#Hacemos las estimaciones de los modelos
+#Cuadrático
+fit.cuadratico <- lm(data_por_dia$Total ~ data_por_dia$Días + data_por_dia$Días ^ 2)
+#Calculamos el logaritmo de la serie
+log.sp <- log(data_por_dia$Total)
+
+#Estimamos este ajuste como auxiliar
+fit.Log.Lin <- lm(log.sp ~ data_por_dia$Días)
+
+#Usamos ciertos datos para estimar el mod. exponecial
+beta_0 <- fit.Log.Lin$coefficient[1]
+beta_1 <- fit.Log.Lin$coefficient[2]
+Datos <- data.frame('Total' = data_por_dia$Total, 'Días' = data_por_dia$Días)
+#Calculamos por regresión no lineal el modelo exponencial
+mod.fit.exp <- nls(Datos$Total ~ exp(beta0 + beta1 * Datos$Días), data = Datos, start = list(beta0 = beta_0, beta1 = beta_1))
+#Log.Lineal
+Log.Lin.Mod <- exp(beta_0 + beta_0 * data_por_dia$Días)
+#Lineal 
+fit.lineal <- lm(data_por_dia$Total ~ data_por_dia$Días)
+
+#Hacemos la gráfica para ver los ajustes
+plot(ts(data_por_dia$Total), xlab="Días", ylab = "Casos acumulados", main = "Cálculo de tendencias")
+# lines(predict(fit.lineal), col="2")
+lines(predict(mod.fit.exp), col="3")
+# lines(Log.Lin.Mod, col="4")
+# lines(fit.cuadratico$fitted, col="6")
+# legend("topleft",c('Lineal', 'Exponencial', 'Log-Lineal', 'Cuadrática'), col = c(2, 3, 4, 6), pch=1, text.col = c(2,3,4,6))
+legend("topleft",c('Exponencial'), col = c(3), pch=1, text.col = c(3))
+
+# Se calculan las medidas estadísticas para cada modelo, usamos una función 
+# que concentra todos los estadísticos.
+medidas <- function(m, y, k){ # y = serie, m = modelo, k = número parametros
+  T <- length(y)
+  yest <- fitted(m)
+  sse <- sum((yest - y)^2)
+  ssr <- sum((y - mean(y))^2)
+  mse <- sse / (T - k)
+  R2 <- 1 - (sse / ssr)
+  Ra2 <- 1 - ((T - 1) * (1 - R2) / (T - k))
+  aic <- log((T - k) * exp(2 * k / T) * mse / T)
+  bic <- log(T^(k / T) * (T - k) * mse / T)
+  M <- c(Ra2, mse, aic, bic)
+  names(M) = c("R2-ajus", "MSE", "logAIC", "logBIC")
+  return(M)
+}
+
+#Elección del modelo
+m.lin <- medidas(fit.lineal, data_por_dia$Total, 2)
+m.exp <- medidas(mod.fit.exp, data_por_dia$Total, 2)
+m.cuad <- medidas(fit.cuadratico, data_por_dia$Total, 3)
+m.LogLin <- medidas(fit.Log.Lin, log(data_por_dia$Total), 2)
+M <- cbind(m.lin, m.exp, m.cuad, m.LogLin)
+M
+# Se nota que el modelo que resulta tener mejores estadísticos es 
+# el exponencial. Lo cual desde la gráfica se visualizaba un poco.
+
 
 # Se crea conjunto de datos por edad y se grafica
 data.edad <- data %>% group_by(Edad) %>% summarise(n = n())
