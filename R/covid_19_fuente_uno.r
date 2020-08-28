@@ -52,11 +52,11 @@ time_series_ncov_Fallecidos <- time_series_ncov_Fallecidos %>%
 
 # Escogemos cuáles países vamos a incluir en el reporte
 # paises <- c('Colombia', 'Ecuador', 'Peru', 'Venezuela', 'Chile', 'Italy', 'Spain', 'Switzerland', 'Germany')
-paises <- c('Colombia', 'Mexico', 'Argentina', 'Chile', 'Peru')
+paises <- c('Colombia', 'Mexico', 'Argentina', 'Peru')
 
 # Filtramos solo por los países que vamos a graficar
 # por último, filtramos hasta 30 días
-serie_Grafica<-time_series_ncov_Confirmed %>% filter (Country.Region %in% paises) # %>% filter(Días <= 30)
+serie_Grafica<-time_series_ncov_Fallecidos %>% filter (Country.Region %in% paises) # %>% filter(Días <= 30)
 
 # Convertimos a data.frame
 serie_Grafica<-data.frame(
